@@ -1,0 +1,81 @@
+# ==========================================
+# OS
+# ==========================================
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# IDE
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+.zed/
+
+# ==========================================
+# Environment / Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# Python & Virtual Environments
+# ==========================================
+# Virtual environments (matches venv, .venv, trip_planner_venv, etc.)
+venv/
+.venv/
+env/
+*venv/
+*_venv/
+
+# Byte-compiled / cache / testing
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Logs & DBs
+*.log
+logs/
+*.sqlite3
+*.db
+
+# Build outputs
+build/
+dist/
+*.egg-info/
+
+# ==========================================
+# AI / Local Models / Generated Files
+# ==========================================
+models/
+.cache/
+outputs/
+artifacts/
+
+# ==========================================
+# Frontend - Node / React / Next / Vite
+# ==========================================
+node_modules/
+dist/
+build/
+.vite/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ==========================================
+# Temporary Files
+# ==========================================
+*.tmp
+*.temp
+*.bak
