@@ -44,16 +44,7 @@ class TravelPlanState(BaseModel):
     budget: Optional[Union[str, int, float]] = None
     preferences:list[str] = Field(default_factory=list)
 
-    next_agent: Optional[
-        Literal[
-            "research",
-            "itinerary",
-            "accommodation",
-            "transport",
-            "aggregator",
-            "end"
-        ]
-    ]= None
+    next_agent: Optional[str] = None
 
     #Worker outputs
     research:Optional[DestinationResearch]=None
