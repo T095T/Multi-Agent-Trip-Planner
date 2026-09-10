@@ -15,10 +15,10 @@ class DestinationResearch(BaseModel):
 
 
 #Itinerary node
-class ItineraryNode(BaseModel):
+class ItineraryDay(BaseModel):
     day:int
     activities:list[str]
-    notes: Optional[str]=None
+    notes: Optional[str]=None   
 
 
 class AccommodationOption(BaseModel):
@@ -48,7 +48,7 @@ class TravelPlanState(BaseModel):
 
     #Worker outputs
     research:Optional[DestinationResearch]=None
-    itinerary:Optional[list[ItineraryNode]]=Field(default_factory=list)
+    itinerary:Optional[list[ItineraryDay]]=Field(default_factory=list)
     accommodation_options:Optional[list[AccommodationOption]]=Field(default_factory=list)
     transport_options:Optional[list[TransportOption]]=Field(default_factory=list)
 

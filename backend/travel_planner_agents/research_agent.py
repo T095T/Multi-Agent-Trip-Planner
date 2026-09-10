@@ -1,11 +1,10 @@
-from langchain_ollama import ChatOllama
-from travel_planner_agents.state import TravelPlanState,DestinationResearch
+try:
+    from travel_planner_agents.llm import llm
+    from travel_planner_agents.state import TravelPlanState, DestinationResearch
+except ModuleNotFoundError:
+    from llm import llm
+    from state import TravelPlanState, DestinationResearch
 
-
-llm = ChatOllama(
-    model="qwen2.5:7b",
-    base_url="http://localhost:11434",
-)
 
 
 structured_llm = llm.with_structured_output(DestinationResearch)
