@@ -18,7 +18,7 @@ class SupervisorDecision(BaseModel):
     ]
 
 
-structured_llm = llm.with_structured_output(SupervisorDecision)
+structured_llm = llm.with_structured_output(SupervisorDecision, method="json_mode")
 
 #Supervisor
 def supervisor_node(state: TravelPlanState):
@@ -35,8 +35,10 @@ def supervisor_node(state: TravelPlanState):
 You are the Supervisor of a multi-agent travel planning system.
 
 Your job is to decide which specialist should work next.
+Respond in valid JSON format matching the schema.
 
 Available agents:
+
 
 - research: researches the destination
 - itinerary: creates the day-by-day itinerary
@@ -97,11 +99,10 @@ Follow these rules:
 6. Choose "end" if the final plan has been approved.
 
 7. Do not choose an agent whose work is already complete.
-
-Return only the next agent.
 """
 
     decision = structured_llm.invoke(prompt)
+
 
     return {
         "next_agent": decision.next_agent

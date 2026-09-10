@@ -12,13 +12,15 @@ class FullItinerary(BaseModel):
 
 
 
-structured_llm = llm.with_structured_output(FullItinerary)
+structured_llm = llm.with_structured_output(FullItinerary, method="json_mode")
 
 # Itinerary Agent
 def itinerary_agent(state: TravelPlanState):
     prompt = f"""
     Your job is to create a practical day-by-day itinerary
 using the information available in the current travel state.
+Respond in valid JSON format matching the schema.
+
 
 Destination:
 {state.destination}

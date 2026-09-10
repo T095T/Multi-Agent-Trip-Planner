@@ -7,22 +7,21 @@ except ModuleNotFoundError:
 
 
 
-structured_llm = llm.with_structured_output(DestinationResearch)
+structured_llm = llm.with_structured_output(DestinationResearch, method="json_mode")
 
 #Research Agent
 def research_agent(state:TravelPlanState):
     prompt=f"""
     You are a senior research agent for a travel planning system.
+    Respond in valid JSON format matching the schema.
     Research the following destination: {state.destination}
     Use the following parameters:
     start_date: {state.start_date}
     end_date: {state.end_date}
     budget: {state.budget}
     preferences: {state.preferences}
-    
-    
-    
     """
+
     research = structured_llm.invoke(prompt)
 
     return {
