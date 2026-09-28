@@ -1,31 +1,21 @@
-from pydantic import BaseModel, Field
+import json
+
 try:
     from travel_planner_agents.llm import llm
-    from travel_planner_agents.state import ItineraryDay, TravelPlanState, TransportOption
+    from travel_planner_agents.state import (
+        TransportOption,
+        TravelPlanState,
+    )
 except ModuleNotFoundError:
     from llm import llm
-    from state import ItineraryDay, TravelPlanState, TransportOption
+    from state import TransportOption, TravelPlanState
 
 
-class TransportResponse(BaseModel):
-    transport_options: list[TransportOption] = Field(
-        description="List of transport options"
-    )
-
-
-
-structured_llm = llm.with_structured_output(TransportResponse, method="json_mode")
-
-# Transport Agent
 def transport_agent(state: TravelPlanState):
     prompt = f"""
-    You are the Transport Agent in a travel planning system.
+You are the Transport Agent in a travel planning system.
 
-Your job is to suggest practical transport options
-for the user's trip.
-
-Respond in valid JSON format matching the schema.
-
+Create transportation options for this trip.
 
 Destination:
 {state.destination}
@@ -42,23 +32,59 @@ User preferences:
 Destination research:
 {state.research}
 
-Suggest several transport options.
+Return ONLY valid JSON.
 
-For each option, provide:
-- Mode (flight, train, bus, taxi, car, other)
-- Provider (if applicable)
-- Approximate price
-- Duration
+The JSON must be an object with exactly one field:
+"transport_options"
 
-Do not claim real-time availability.
-Do not invent exact booking information.
-Use approximate values when exact information is unavailable.
+"transport_options" must be a list.
 
-Return the transport options.
-    """
-    response = structured_llm.invoke(prompt)
+Each item must contain:
+- mode
+- provider
+- price
+- duration
+
+Valid mode values:
+- flight
+- train
+- bus
+- taxi
+- car
+- car_rental
+- ferry
+- other
+
+Example format:
+
+{{
+    "transport_options": [
+        {{
+            "mode": "flight",
+            "provider": "IndiGo",
+            "price": "₹2000-₹4000",
+            "duration": "2h 30m"
+        }}
+    ]
+}}
+
+Rules:
+- Prices should be approximate strings/ranges.
+- Duration should be an approximate string.
+- Do not claim real-time availability.
+- Do not invent exact booking information.
+- Return ONLY the JSON object.
+"""
+
+    response = llm.invoke(prompt)
+
+    data = json.loads(response.content)
+
+    transport_options = [
+        TransportOption(**option)
+        for option in data["transport_options"]
+    ]
 
     return {
-        "transport_options": response.transport_options  
+        "transport_options": transport_options
     }
-
