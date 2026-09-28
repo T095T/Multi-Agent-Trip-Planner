@@ -16,7 +16,7 @@ initial_state = {
 
 config = {
     "configurable": {
-        "thread_id": "trip-goa-002"
+        "thread_id": "trip-goa-feedback-01"
     }
 }
 
@@ -29,22 +29,25 @@ result = graph.invoke(
 )
 
 print("\n" + "=" * 60)
-print("GRAPH PAUSED FOR HUMAN REVIEW")
+print("HUMAN REVIEW")
 print("=" * 60)
 
-print("\nInterrupt information:")
-print(result)
-
-print("\nCurrent draft plan:")
 print(result.get("draft_plan"))
 
-print("\nResuming graph with approval...\n")
+approval = input("\nApprove this plan? (yes/no): ").strip().lower()
+
+if approval == "yes":
+    feedback = None
+    approved = True
+else:
+    approved = False
+    feedback = input("What should be changed? ").strip()
 
 final_result = graph.invoke(
     Command(
         resume={
-            "approved": True,
-            "feedback": None,
+            "approved": approved,
+            "feedback": feedback,
         }
     ),
     config=config,
