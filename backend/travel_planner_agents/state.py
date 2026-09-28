@@ -68,6 +68,7 @@ class TravelPlanState(BaseModel):
     end_date: str
     budget: Optional[Union[str, int, float]] = None
     preferences: list[str] = Field(default_factory=list)
+    revision_requested:bool = False
 
     # Routing
     next_agent: Optional[

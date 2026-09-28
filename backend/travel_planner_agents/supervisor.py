@@ -16,6 +16,7 @@ class SupervisorDecision(BaseModel):
         "aggregator",
         "end",
     ]
+    revision_requested: bool = False
 
 
 structured_llm = llm.with_structured_output(SupervisorDecision, method="json_mode")
@@ -80,30 +81,45 @@ Current draft plan:
 User feedback:
 {state.user_feedback}
 
+
+If user feedback is present, analyze it and determine which specialist
+agent needs to rerun.
+
+Examples:
+
+- Feedback about destination information, attractions, weather,
+  visa, or safety → research
+- Feedback about daily activities, schedule, pacing, or itinerary → itinerary
+- Feedback about hotels, accommodation, rooms, or stay → accommodation
+- Feedback about flights, trains, buses, taxis, or transportation → transport
+
+If feedback affects multiple areas, choose the first specialist
+that needs to be updated. The workflow can handle additional
+revisions later.
+
 Follow these rules:
 
-1. If research is incomplete, choose "research".
+1. If the final plan has been approved, choose "end".
 
-2. Choose "itinerary" only after research is complete
-   and the itinerary is incomplete.
+2. If user feedback is present and the final plan has NOT been
+   approved, choose the specialist agent whose output needs
+   to be revised based on the feedback.
 
-3. Choose "accommodation" only after research is complete
-   and accommodation options are incomplete.
+   In this case, set revision_requested to true.
 
-4. Choose "transport" only after research is complete
-   and transport options are incomplete.
+3. If there is no user feedback, set revision_requested to false.
 
-5. Choose "aggregator" only when research, itinerary,
-   accommodation, and transport are all complete.
+4. Do not choose an agent whose work is already complete
+   unless user feedback specifically requires that agent
+   to revise its work.
 
-6. Choose "end" if the final plan has been approved.
-
-7. Do not choose an agent whose work is already complete.
+5. Return only the next agent.
 """
 
     decision = structured_llm.invoke(prompt)
 
 
     return {
-        "next_agent": decision.next_agent
+        "next_agent": decision.next_agent,
+        "revision_requested":decision.revision_requested
     }

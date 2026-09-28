@@ -74,7 +74,15 @@ graph_builder.add_edge("transport", "supervisor")
 
 #aggregator is the final stage of this pipeline
 graph_builder.add_edge("aggregator","human_review")
-graph_builder.add_edge("human_review",END)
+#Conditional graph edge and node for human feedback feature
+graph_builder.add_conditional_edges(
+    "human_review",
+    lambda state: "end" if state.is_approved else "supervisor",
+    {
+        "end": END,
+        "supervisor": "supervisor",
+    },
+)
 
 
 graph = graph_builder.compile(

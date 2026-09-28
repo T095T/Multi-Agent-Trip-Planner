@@ -14,6 +14,6 @@ def human_review(state:TravelPlanState):
     )
     return {
         "user_feedback": review.get("feedback"),
-        "is_approved": review.get("is_approved"),
+        "is_approved": review.get("is_approved") or False,
     }
 
