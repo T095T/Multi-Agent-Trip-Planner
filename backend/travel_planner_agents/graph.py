@@ -1,6 +1,8 @@
 #LANGGRAPH LOGIC    
 
 from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import InMemorySaver
+from travel_planner_agents.review import human_review
 
 try:
     from travel_planner_agents.state import TravelPlanState
@@ -20,6 +22,12 @@ except ModuleNotFoundError:
     from accomodation_agent import accommodation_agent
 
 
+
+
+checkpointer = InMemorySaver()
+
+
+
 def route_from_supervisor(state: TravelPlanState):
 
     return state.next_agent
@@ -35,6 +43,7 @@ graph_builder.add_node("itinerary", itinerary_agent)
 graph_builder.add_node("accommodation", accommodation_agent)
 graph_builder.add_node("transport", transport_agent)
 graph_builder.add_node("aggregator", aggregator_node)
+graph_builder.add_node("human_review",human_review)
 
 
 # Start
@@ -64,7 +73,11 @@ graph_builder.add_edge("transport", "supervisor")
 
 
 #aggregator is the final stage of this pipeline
-graph_builder.add_edge("aggregator",END)
+graph_builder.add_edge("aggregator","human_review")
+graph_builder.add_edge("human_review",END)
 
 
-graph = graph_builder.compile()
+graph = graph_builder.compile(
+    checkpointer=checkpointer
+)
+

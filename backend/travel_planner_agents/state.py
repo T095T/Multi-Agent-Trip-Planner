@@ -1,8 +1,12 @@
+import re
 from typing import Optional, Literal, Union
 
 from pydantic import BaseModel, Field
 from langgraph.graph import add_messages
 from typing_extensions import Annotated
+
+
+
 
 
 # Research Node
@@ -27,9 +31,11 @@ class ItineraryDay(BaseModel):
 
 class AccommodationOption(BaseModel):
     name: str
-    price_per_night: Optional[float] = None
+    price_per_night: Optional[str] = None
     location: Optional[str] = None
-    rating: Optional[float] = None
+    rating: Optional[str] = None
+
+   
 
 
 # Transport Node
@@ -41,11 +47,16 @@ class TransportOption(BaseModel):
         "bus",
         "taxi",
         "car",
+        "car_rental",
+        "rental",
+        "ferry",
         "other",
     ]
     provider: Optional[str] = None
-    price: Optional[float] = None
+    price: Optional[str] = None
     duration: Optional[str] = None
+
+    
 
 
 # Shared Travel Planning State

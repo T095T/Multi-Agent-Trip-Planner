@@ -8,7 +8,7 @@ except ModuleNotFoundError:
 
 
 class AccommodationResponse(BaseModel):
-    accommodations: list[AccommodationOption] = Field(
+    accommodation_options: list[AccommodationOption] = Field(
         description="List of accommodation options"
     )
 
@@ -54,11 +54,21 @@ Do not claim real-time availability.
 Do not invent exact booking information.
 Use approximate values when exact information is unavailable.
 
+For each accommodation option, provide:
+
+- name: string
+- price_per_night: string such as "₹2500" or "₹2500-₹3500"
+- location: string
+- rating: string such as "4.3/5"
+
+Do not return numeric values for price or rating.
+Do not add currency symbols outside the string.
+
 Return the accommodation options.
     """
     response = structured_llm.invoke(prompt)
 
     return {
-        "accommodation_options": response.accommodations  
+        "accommodation_options": response.accommodation_options
     }
 
