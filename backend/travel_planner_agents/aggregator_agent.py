@@ -56,5 +56,6 @@ Return only the final travel plan in readable text.
     response = llm.invoke(prompt)
 
     return {
-        "draft_plan": response.content
+        "draft_plan": response.content,
+        "last_agent":"aggregator"
     }

@@ -72,6 +72,7 @@ Return only the JSON object matching the required structure.
     response = structured_llm.invoke(prompt)
 
     return {
-        "itinerary": response.itinerary   
+        "itinerary": response.itinerary,
+        "last_agent":"itinerary"  
     }
 

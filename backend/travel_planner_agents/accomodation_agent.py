@@ -69,6 +69,7 @@ Return the accommodation options.
     response = structured_llm.invoke(prompt)
 
     return {
-        "accommodation_options": response.accommodation_options
+        "accommodation_options": response.accommodation_options,
+        "last_agent": "accommodation"
     }
 

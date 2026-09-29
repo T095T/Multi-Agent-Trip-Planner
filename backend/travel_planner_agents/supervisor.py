@@ -17,6 +17,13 @@ class SupervisorDecision(BaseModel):
         "end",
     ]
     revision_requested: bool = False
+    revision_target: Literal[
+        "research",
+        "itinerary",
+        "accommodation",
+        "transport",
+        "none",
+    ] = "none"
 
 
 structured_llm = llm.with_structured_output(SupervisorDecision, method="json_mode")
@@ -81,6 +88,12 @@ Current draft plan:
 User feedback:
 {state.user_feedback}
 
+Revision target:
+{state.revision_target}
+
+Last agent executed:
+{state.last_agent}
+
 
 If user feedback is present, analyze it and determine which specialist
 agent needs to rerun.
@@ -101,19 +114,37 @@ Follow these rules:
 
 1. If the final plan has been approved, choose "end".
 
-2. If user feedback is present and the final plan has NOT been
-   approved, choose the specialist agent whose output needs
-   to be revised based on the feedback.
+2. If user feedback is present, the final plan is NOT approved,
+   and revision_target is "none":
 
-   In this case, set revision_requested to true.
+   - Identify which specialist agent needs to be rerun.
+   - Set revision_requested to true.
+   - Set revision_target to that specialist.
+   - Set next_agent to that specialist.
 
-3. If there is no user feedback, set revision_requested to false.
+3. If revision_target is already set to a specialist AND
+   last_agent is the same specialist:
 
-4. Do not choose an agent whose work is already complete
+   - The revision has been completed.
+   - Set next_agent to "aggregator".
+   - Keep revision_target unchanged.
+   - Set revision_requested to false.
+
+4. If revision_target is set but last_agent is NOT the
+   revision target, continue according to the current workflow.
+
+5. If there is no user feedback and no revision in progress,
+   follow the normal workflow.
+
+6. Do not choose an agent whose work is already complete
    unless user feedback specifically requires that agent
    to revise its work.
 
-5. Return only the next agent.
+7. If no revision is required, set revision_target to "none".
+
+8. If the final plan has been approved, choose "end".
+
+9. Return only the next agent and the revision fields.
 """
 
     decision = structured_llm.invoke(prompt)
@@ -121,5 +152,6 @@ Follow these rules:
 
     return {
         "next_agent": decision.next_agent,
-        "revision_requested":decision.revision_requested
+        "revision_requested":decision.revision_requested,
+        "revision_target":decision.revision_target,
     }

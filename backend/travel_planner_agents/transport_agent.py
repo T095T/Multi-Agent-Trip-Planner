@@ -86,5 +86,6 @@ Rules:
     ]
 
     return {
-        "transport_options": transport_options
+        "transport_options": transport_options,
+        "last_agent":"transport"
     }

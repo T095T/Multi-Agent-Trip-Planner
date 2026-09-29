@@ -25,5 +25,6 @@ def research_agent(state:TravelPlanState):
     research = structured_llm.invoke(prompt)
 
     return {
-        "research":research
+        "research":research,
+        "last_agent":"research"
     }

@@ -82,6 +82,19 @@ class TravelPlanState(BaseModel):
         ]
     ] = None
 
+    #previous agent
+    last_agent: Optional[
+    Literal[
+        "research",
+        "itinerary",
+        "accommodation",
+        "transport",
+        "aggregator",
+    ]
+] = None
+
+    
+
     # Worker outputs
     research: Optional[DestinationResearch] = None
 
@@ -103,6 +116,15 @@ class TravelPlanState(BaseModel):
     # Review loop
     user_feedback: Optional[str] = None
     is_approved: bool = False
+    revision_target: Optional[
+    Literal[
+        "research",
+        "itinerary",
+        "accommodation",
+        "transport",
+        "none",
+    ]   
+] = None
 
     # Conversation history
     messages: Annotated[list, add_messages] = Field(
