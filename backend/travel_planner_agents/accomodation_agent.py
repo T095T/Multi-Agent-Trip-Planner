@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+import json
 try:
     from travel_planner_agents.llm import llm
     from travel_planner_agents.state import ItineraryDay, TravelPlanState, AccommodationOption
@@ -14,7 +15,7 @@ class AccommodationResponse(BaseModel):
 
 
 
-structured_llm = llm.with_structured_output(AccommodationResponse, method="json_mode")
+structured_llm = llm.with_structured_output(AccommodationResponse)
 
 # Accommodation Agent
 def accommodation_agent(state: TravelPlanState):
@@ -54,22 +55,32 @@ Do not claim real-time availability.
 Do not invent exact booking information.
 Use approximate values when exact information is unavailable.
 
-For each accommodation option, provide:
+Return ONLY valid JSON in exactly this format:
 
-- name: string
-- price_per_night: string such as "₹2500" or "₹2500-₹3500"
-- location: string
-- rating: string such as "4.3/5"
+{{
+  "accommodation_options": [
+    {{
+      "name": "string",
+      "price_per_night": "string",
+      "location": "string",
+      "rating": "string"
+    }}
+  ]
+}}
 
 Do not return numeric values for price or rating.
 Do not add currency symbols outside the string.
 
 Return the accommodation options.
     """
-    response = structured_llm.invoke(prompt)
+    response = llm.invoke(prompt)
+
+    data = json.loads(response.content)
+
+    accommodation_response = AccommodationResponse.model_validate(data)
 
     return {
-        "accommodation_options": response.accommodation_options,
-        "last_agent": "accommodation"
+        "accommodation_options": accommodation_response.accommodation_options,
+        "last_agent": "accommodation",
     }
 
