@@ -10,6 +10,7 @@ from travel_planner_agents.state import (
     AccommodationOption,
     TransportOption,
 )
+from fastapi.middleware.cors import CORSMiddleware
 
 #Body for API request
 class TripRequest(BaseModel):
@@ -56,6 +57,14 @@ app = FastAPI(
     title="Travel Planning Multi-Agent API",
     description="Multi-agent travel planning system powered by LangGraph",
     version="1.0.0",
+)
+#CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
