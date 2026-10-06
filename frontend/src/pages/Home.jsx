@@ -7,11 +7,14 @@ import {
   Mountain,
   Plane,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
 
 
 function Home() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen overflow-hidden bg-[#fffdf5]">
 
@@ -59,7 +62,10 @@ function Home() {
             {/* CTA */}
             <div className="mt-9 flex flex-wrap items-center gap-6">
 
-              <button className="group flex items-center gap-3 border-4 border-black bg-[#ff7777] px-7 py-4 text-lg font-black shadow-[7px_7px_0_#111] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[3px_3px_0_#111]">
+              <button
+                onClick={() => navigate("/plan")}
+                className="group flex cursor-pointer items-center gap-3 border-4 border-black bg-[#ff7777] px-7 py-4 text-lg font-black shadow-[7px_7px_0_#111] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[3px_3px_0_#111]"
+              >
 
                 PLAN MY TRIP
 

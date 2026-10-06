@@ -1,0 +1,646 @@
+import { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  Check,
+  MapPin,
+  CalendarDays,
+  Wallet,
+  Hotel,
+  Plane,
+  Compass,
+  MessageSquare,
+} from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+
+import { getTrip, reviewTrip } from "../services/api";
+
+
+function TripResults() {
+  const { threadId } = useParams();
+  const navigate = useNavigate();
+
+  const [trip, setTrip] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  const [feedback, setFeedback] = useState("");
+  const [showFeedback, setShowFeedback] = useState(false);
+
+  const [error, setError] = useState("");
+
+
+  useEffect(() => {
+    async function loadTrip() {
+      try {
+        setLoading(true);
+
+        const data = await getTrip(threadId);
+
+        setTrip(data);
+
+      } catch (error) {
+        console.error(error);
+        setError("Unable to load your trip.");
+
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadTrip();
+  }, [threadId]);
+
+
+  const handleApprove = async () => {
+    try {
+      setReviewLoading(true);
+      setError("");
+
+      const result = await reviewTrip(threadId, {
+        approved: true,
+        feedback: null,
+      });
+
+      setTrip((current) => ({
+        ...current,
+        status: result.status,
+      }));
+
+    } catch (error) {
+      console.error(error);
+      setError("Unable to approve the trip.");
+
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+
+  const handleRequestChanges = async () => {
+    if (!feedback.trim()) {
+      return;
+    }
+
+    try {
+      setReviewLoading(true);
+      setError("");
+
+      await reviewTrip(threadId, {
+        approved: false,
+        feedback: feedback.trim(),
+      });
+
+      const updatedTrip = await getTrip(threadId);
+      setTrip(updatedTrip);
+
+      setFeedback("");
+      setShowFeedback(false);
+
+    } catch (error) {
+      console.error(error);
+      setError("Unable to request changes.");
+
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#fffdf5] p-6">
+
+        <div className="border-4 border-black bg-[#ffde59] p-8 text-center shadow-[8px_8px_0_#111]">
+
+          <div className="text-4xl font-black">
+            BUILDING YOUR TRIP...
+          </div>
+
+          <p className="mt-3 font-bold">
+            Our travel agents are working on it.
+          </p>
+
+        </div>
+
+      </div>
+    );
+  }
+
+
+  if (error || !trip) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#fffdf5] p-6">
+
+        <div className="border-4 border-black bg-[#ff7777] p-8 shadow-[8px_8px_0_#111]">
+
+          <h1 className="text-3xl font-black">
+            SOMETHING WENT WRONG
+          </h1>
+
+          <p className="mt-3 font-bold">
+            {error || "Trip not found."}
+          </p>
+
+          <button
+            onClick={() => navigate("/plan")}
+            className="mt-6 border-4 border-black bg-white px-5 py-3 font-black shadow-[4px_4px_0_#111]"
+          >
+            BUILD ANOTHER TRIP
+          </button>
+
+        </div>
+
+      </div>
+    );
+  }
+
+
+  const isCompleted = trip.status === "completed";
+
+
+  return (
+    <div className="min-h-screen bg-[#fffdf5]">
+
+      {/* Header */}
+
+      <header className="border-b-4 border-black bg-[#ffde59]">
+
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
+
+          <button
+            onClick={() => navigate("/plan")}
+            className="flex items-center gap-2 font-black"
+          >
+            <ArrowLeft size={22} strokeWidth={3} />
+            NEW TRIP
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="cursor-pointer border-4 border-black bg-white px-4 py-2 font-black shadow-[4px_4px_0_#111] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0_#111]"
+          >
+            TRIPWISE
+          </button>
+
+          <div className="hidden items-center gap-2 font-black sm:flex">
+            <Compass size={20} strokeWidth={3} />
+            YOUR TRIP
+          </div>
+
+        </div>
+
+      </header>
+
+
+      <main className="mx-auto max-w-6xl px-5 py-10 lg:px-8 lg:py-14">
+
+        {/* Hero */}
+
+        <section className="border-4 border-black bg-[#c8b6ff] p-6 shadow-[8px_8px_0_#111] md:p-8">
+
+          <p className="text-sm font-black tracking-[0.25em]">
+            YOUR AI TRAVEL PLAN
+          </p>
+
+          <h1 className="mt-3 text-5xl font-black tracking-[-0.04em] sm:text-6xl">
+            {trip.destination.toUpperCase()}
+          </h1>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+
+            <div className="flex items-center gap-2 border-4 border-black bg-white px-4 py-3 font-black shadow-[4px_4px_0_#111]">
+              <CalendarDays size={20} strokeWidth={3} />
+              {trip.start_date} → {trip.end_date}
+            </div>
+
+            {trip.budget && (
+              <div className="flex items-center gap-2 border-4 border-black bg-[#ffde59] px-4 py-3 font-black shadow-[4px_4px_0_#111]">
+                <Wallet size={20} strokeWidth={3} />
+                ₹{trip.budget}
+              </div>
+            )}
+
+          </div>
+
+        </section>
+
+
+        {/* Research */}
+
+        {trip.research && (
+          <section className="mt-8 border-4 border-black bg-white p-6 shadow-[7px_7px_0_#111]">
+
+            <div className="flex items-center gap-3">
+
+              <div className="border-4 border-black bg-[#8ed8ff] p-3">
+                <MapPin size={25} strokeWidth={3} />
+              </div>
+
+              <h2 className="text-3xl font-black">
+                DESTINATION RESEARCH
+              </h2>
+
+            </div>
+
+
+            {trip.research.overview && (
+              <p className="mt-6 text-lg font-bold leading-relaxed text-neutral-700">
+                {trip.research.overview}
+              </p>
+            )}
+
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+
+              {trip.research.weather && (
+                <div className="border-4 border-black bg-[#ffde59] p-4">
+
+                  <p className="text-sm font-black tracking-widest">
+                    WEATHER
+                  </p>
+
+                  <p className="mt-2 font-bold">
+                    {trip.research.weather}
+                  </p>
+
+                </div>
+              )}
+
+
+              {trip.research.safety_notes && (
+                <div className="border-4 border-black bg-[#ff8ee8] p-4">
+
+                  <p className="text-sm font-black tracking-widest">
+                    SAFETY
+                  </p>
+
+                  <p className="mt-2 font-bold">
+                    {trip.research.safety_notes}
+                  </p>
+
+                </div>
+              )}
+
+            </div>
+
+
+            {trip.research.top_attractions?.length > 0 && (
+              <div className="mt-6">
+
+                <h3 className="text-xl font-black">
+                  TOP ATTRACTIONS
+                </h3>
+
+                <div className="mt-3 flex flex-wrap gap-3">
+
+                  {trip.research.top_attractions.map((place, index) => (
+                    <div
+                      key={index}
+                      className="border-4 border-black bg-[#fffdf5] px-4 py-3 font-black shadow-[3px_3px_0_#111]"
+                    >
+                      {place}
+                    </div>
+                  ))}
+
+                </div>
+
+              </div>
+            )}
+
+          </section>
+        )}
+
+
+        {/* Itinerary */}
+
+        <section className="mt-8 border-4 border-black bg-[#8ed8ff] p-6 shadow-[7px_7px_0_#111]">
+
+          <div className="flex items-center gap-3">
+
+            <div className="border-4 border-black bg-white p-3">
+              <CalendarDays size={25} strokeWidth={3} />
+            </div>
+
+            <h2 className="text-3xl font-black">
+              ITINERARY
+            </h2>
+
+          </div>
+
+
+          <div className="mt-6 space-y-5">
+
+            {trip.itinerary.map((day) => (
+
+              <div
+                key={day.day}
+                className="border-4 border-black bg-white p-5 shadow-[4px_4px_0_#111]"
+              >
+
+                <div className="flex items-center gap-3">
+
+                  <span className="border-4 border-black bg-[#ffde59] px-3 py-2 font-black">
+                    DAY {day.day}
+                  </span>
+
+                </div>
+
+
+                <ul className="mt-4 space-y-2">
+
+                  {day.activities.map((activity, index) => (
+                    <li
+                      key={index}
+                      className="font-bold"
+                    >
+                      • {activity}
+                    </li>
+                  ))}
+
+                </ul>
+
+
+                {day.notes && (
+                  <p className="mt-4 border-t-4 border-black pt-3 font-bold text-neutral-600">
+                    {day.notes}
+                  </p>
+                )}
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </section>
+
+
+        {/* Accommodation */}
+
+        <section className="mt-8 border-4 border-black bg-[#ff8ee8] p-6 shadow-[7px_7px_0_#111]">
+
+          <div className="flex items-center gap-3">
+
+            <div className="border-4 border-black bg-white p-3">
+              <Hotel size={25} strokeWidth={3} />
+            </div>
+
+            <h2 className="text-3xl font-black">
+              WHERE TO STAY
+            </h2>
+
+          </div>
+
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+
+            {trip.accommodation_options.map((hotel, index) => (
+
+              <div
+                key={index}
+                className="border-4 border-black bg-white p-5 shadow-[4px_4px_0_#111]"
+              >
+
+                <h3 className="text-xl font-black">
+                  {hotel.name}
+                </h3>
+
+                <p className="mt-2 font-bold">
+                  📍 {hotel.location}
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+
+                  <span className="border-2 border-black bg-[#ffde59] px-3 py-1 font-black">
+                    {hotel.price_per_night}/night
+                  </span>
+
+                  {hotel.rating && (
+                    <span className="border-2 border-black bg-[#c8b6ff] px-3 py-1 font-black">
+                      ★ {hotel.rating}
+                    </span>
+                  )}
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </section>
+
+
+        {/* Transport */}
+
+        <section className="mt-8 border-4 border-black bg-[#ffde59] p-6 shadow-[7px_7px_0_#111]">
+
+          <div className="flex items-center gap-3">
+
+            <div className="border-4 border-black bg-white p-3">
+              <Plane size={25} strokeWidth={3} />
+            </div>
+
+            <h2 className="text-3xl font-black">
+              GETTING AROUND
+            </h2>
+
+          </div>
+
+
+          <div className="mt-6 grid gap-5 md:grid-cols-2">
+
+            {trip.transport_options.map((transport, index) => (
+
+              <div
+                key={index}
+                className="border-4 border-black bg-white p-5 shadow-[4px_4px_0_#111]"
+              >
+
+                <div className="flex items-center justify-between gap-3">
+
+                  <h3 className="text-xl font-black uppercase">
+                    {transport.mode}
+                  </h3>
+
+                  {transport.provider && (
+                    <span className="border-2 border-black px-2 py-1 text-sm font-black">
+                      {transport.provider}
+                    </span>
+                  )}
+
+                </div>
+
+
+                <div className="mt-4 space-y-2 font-bold">
+
+                  {transport.price && (
+                    <p>💰 {transport.price}</p>
+                  )}
+
+                  {transport.duration && (
+                    <p>⏱ {transport.duration}</p>
+                  )}
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </section>
+
+
+        {/* Draft plan */}
+
+        {trip.draft_plan && (
+          <section className="mt-8 border-4 border-black bg-white p-6 shadow-[7px_7px_0_#111]">
+
+            <div className="flex items-center gap-3">
+
+              <div className="border-4 border-black bg-[#c8b6ff] p-3">
+                <Compass size={25} strokeWidth={3} />
+              </div>
+
+              <h2 className="text-3xl font-black">
+                YOUR COMPLETE PLAN
+              </h2>
+
+            </div>
+
+
+            <div className="mt-6 whitespace-pre-wrap text-lg font-bold leading-relaxed text-neutral-700">
+              {trip.draft_plan}
+            </div>
+
+          </section>
+        )}
+
+
+        {/* Review */}
+
+        {!isCompleted ? (
+          <section className="mt-10 border-4 border-black bg-black p-6 text-white shadow-[8px_8px_0_#ffde59]">
+
+            <div className="flex items-start gap-4">
+
+              <MessageSquare
+                size={32}
+                strokeWidth={3}
+              />
+
+              <div>
+
+                <h2 className="text-3xl font-black">
+                  WHAT DO YOU THINK?
+                </h2>
+
+                <p className="mt-2 font-bold text-neutral-300">
+                  Approve the plan or tell our agents what you want changed.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            {!showFeedback ? (
+
+              <div className="mt-6 flex flex-col gap-4 sm:flex-row">
+
+                <button
+                  onClick={handleApprove}
+                  disabled={reviewLoading}
+                  className="flex flex-1 items-center justify-center gap-2 border-4 border-white bg-[#8ed8ff] px-5 py-4 font-black text-black shadow-[5px_5px_0_#ffde59] transition hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                >
+                  <Check size={22} strokeWidth={4} />
+                  {reviewLoading ? "APPROVING..." : "APPROVE TRIP"}
+                </button>
+
+
+                <button
+                  onClick={() => setShowFeedback(true)}
+                  disabled={reviewLoading}
+                  className="flex-1 border-4 border-white bg-[#ff7777] px-5 py-4 font-black text-black shadow-[5px_5px_0_#ffde59] transition hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+                >
+                  REQUEST CHANGES
+                </button>
+
+              </div>
+
+            ) : (
+
+              <div className="mt-6">
+
+                <textarea
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="What would you like us to change?"
+                  rows={5}
+                  className="w-full resize-none border-4 border-white bg-white p-4 font-bold text-black outline-none"
+                />
+
+
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+
+                  <button
+                    onClick={handleRequestChanges}
+                    disabled={!feedback.trim() || reviewLoading}
+                    className="flex-1 border-4 border-white bg-[#ffde59] px-5 py-4 font-black text-black disabled:opacity-50"
+                  >
+                    {reviewLoading
+                      ? "UPDATING PLAN..."
+                      : "SEND FEEDBACK"}
+                  </button>
+
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFeedback(false);
+                      setFeedback("");
+                    }}
+                    className="border-4 border-white px-5 py-4 font-black transition hover:bg-white/10"
+                  >
+                    CANCEL
+                  </button>
+
+                </div>
+
+              </div>
+
+            )}
+
+          </section>
+        ) : (
+
+          <section className="mt-10 border-4 border-black bg-[#8ed8ff] p-8 text-center shadow-[8px_8px_0_#111]">
+
+            <div className="mx-auto flex h-16 w-16 items-center justify-center border-4 border-black bg-white">
+              <Check size={35} strokeWidth={4} />
+            </div>
+
+            <h2 className="mt-5 text-4xl font-black">
+              TRIP APPROVED!
+            </h2>
+
+            <p className="mt-2 font-bold">
+              Your travel plan is ready. Have an amazing trip!
+            </p>
+
+          </section>
+
+        )}
+
+      </main>
+
+    </div>
+  );
+}
+
+export default TripResults;
