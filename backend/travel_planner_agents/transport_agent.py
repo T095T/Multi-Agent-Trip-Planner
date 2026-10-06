@@ -1,4 +1,4 @@
-import json
+from pydantic import BaseModel, Field
 
 try:
     from travel_planner_agents.llm import llm
@@ -9,6 +9,15 @@ try:
 except ModuleNotFoundError:
     from llm import llm
     from state import TransportOption, TravelPlanState
+
+
+class TransportResponse(BaseModel):
+    transport_options: list[TransportOption] = Field(
+        description="List of transport options"
+    )
+
+
+structured_llm = llm.with_structured_output(TransportResponse)
 
 
 def transport_agent(state: TravelPlanState):
@@ -32,19 +41,6 @@ User preferences:
 Destination research:
 {state.research}
 
-Return ONLY valid JSON.
-
-The JSON must be an object with exactly one field:
-"transport_options"
-
-"transport_options" must be a list.
-
-Each item must contain:
-- mode
-- provider
-- price
-- duration
-
 Valid mode values:
 - flight
 - train
@@ -55,37 +51,16 @@ Valid mode values:
 - ferry
 - other
 
-Example format:
-
-{{
-    "transport_options": [
-        {{
-            "mode": "flight",
-            "provider": "IndiGo",
-            "price": "₹2000-₹4000",
-            "duration": "2h 30m"
-        }}
-    ]
-}}
-
 Rules:
 - Prices should be approximate strings/ranges.
 - Duration should be an approximate string.
 - Do not claim real-time availability.
 - Do not invent exact booking information.
-- Return ONLY the JSON object.
 """
 
-    response = llm.invoke(prompt)
-
-    data = json.loads(response.content)
-
-    transport_options = [
-        TransportOption(**option)
-        for option in data["transport_options"]
-    ]
+    response = structured_llm.invoke(prompt)
 
     return {
-        "transport_options": transport_options,
-        "last_agent":"transport"
+        "transport_options": response.transport_options,
+        "last_agent": "transport"
     }

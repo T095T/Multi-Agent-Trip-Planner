@@ -1,32 +1,25 @@
-from pydantic import BaseModel, Field
 import json
+
+from pydantic import BaseModel, Field
+
 try:
     from travel_planner_agents.llm import llm
-    from travel_planner_agents.state import ItineraryDay, TravelPlanState, AccommodationOption
+    from travel_planner_agents.state import (
+        TravelPlanState,
+        AccommodationOption,
+    )
 except ModuleNotFoundError:
     from llm import llm
-    from state import ItineraryDay, TravelPlanState, AccommodationOption
+    from state import TravelPlanState, AccommodationOption
 
-
-class AccommodationResponse(BaseModel):
-    accommodation_options: list[AccommodationOption] = Field(
-        description="List of accommodation options"
-    )
-
-
-
-structured_llm = llm.with_structured_output(AccommodationResponse)
 
 # Accommodation Agent
 def accommodation_agent(state: TravelPlanState):
+
     prompt = f"""
-    You are the Accommodation Agent in a travel planning system.
+You are the Accommodation Agent in a travel planning system.
 
-Your job is to suggest practical accommodation options
-for the user's trip.
-
-Respond in valid JSON format matching the schema.
-
+Your job is to suggest practical accommodation options for the user's trip.
 
 Destination:
 {state.destination}
@@ -55,7 +48,9 @@ Do not claim real-time availability.
 Do not invent exact booking information.
 Use approximate values when exact information is unavailable.
 
-Return ONLY valid JSON in exactly this format:
+Return ONLY valid JSON.
+
+Use exactly this structure:
 
 {{
   "accommodation_options": [
@@ -68,19 +63,25 @@ Return ONLY valid JSON in exactly this format:
   ]
 }}
 
-Do not return numeric values for price or rating.
-Do not add currency symbols outside the string.
+Rules:
+- Use exactly the key "accommodation_options".
+- Each option must contain exactly: name, price_per_night, location, rating.
+- Do not add extra fields.
+- Do not repeat JSON keys.
+- price_per_night must be a string.
+- rating must be a string.
+"""
 
-Return the accommodation options.
-    """
     response = llm.invoke(prompt)
 
     data = json.loads(response.content)
 
-    accommodation_response = AccommodationResponse.model_validate(data)
+    accommodation_options = [
+        AccommodationOption(**option)
+        for option in data["accommodation_options"]
+    ]
 
     return {
-        "accommodation_options": accommodation_response.accommodation_options,
+        "accommodation_options": accommodation_options,
         "last_agent": "accommodation",
     }
-
